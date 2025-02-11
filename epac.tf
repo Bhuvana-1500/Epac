@@ -230,7 +230,7 @@ resource "azurerm_policy_definition" "standard_naming_convention_policy" {
 
 resource "azurerm_management_group_policy_assignment" "standard_naming_convention_policy_assignment" {
   name                 = "Standard Naming Convention Policy"
-  management_group_id  = data.azurerm_management_group.naming_policy.id
+  management_group_id  = azurerm_management_group.naming_policy.root.id
   policy_definition_id = azurerm_policy_definition.standard_naming_convention_policy.id
   display_name         = "Standard Naming Convention Policy"
 }
