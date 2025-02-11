@@ -3,7 +3,7 @@ name: Sync and Deploy Terraform Configuration
 on:
   push:
     paths:
-      - 'epac.tf'  # Trigger workflow on any Terraform file change
+      - 'epac.tf'  # Trigger workflow when Terraform file changes
 
 jobs:
   sync-upload-deploy:
@@ -25,19 +25,19 @@ jobs:
           CLIENT_ID=$(awk -F' *= *' '/client_id/ {print $2}' epac.tf | tr -d '"')
           CLIENT_SECRET=$(awk -F' *= *' '/client_secret/ {print $2}' epac.tf | tr -d '"')
           TENANT_ID=$(awk -F' *= *' '/tenant_id/ {print $2}' epac.tf | tr -d '"')
-          echo "client_id=$CLIENT_ID" >> $GITHUB_ENV
-          echo "client_secret=$CLIENT_SECRET" >> $GITHUB_ENV
-          echo "tenant_id=$TENANT_ID" >> $GITHUB_ENV
+
+          # Securely store them as environment variables
+          echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_ENV
+          echo "CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
+          echo "TENANT_ID=$TENANT_ID" >> $GITHUB_ENV
 
       - name: Log in to Azure CLI
         run: |
-         az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p="${{ secrets.AZURE_CLIENT_SECRET }}" --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az login --service-principal -u $CLIENT_ID -p="$CLIENT_SECRET" --tenant $TENANT_ID
 
       - name: Upload Terraform Files to Azure Storage
         run: |
           az storage blob upload-batch --account-name strepac --destination conepac --source . --pattern "*.tf" --overwrite --auth-mode login
-        env:
-          AZURE_STORAGE_ACCOUNT: "strepac"
 
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -45,20 +45,10 @@ jobs:
           terraform_version: 1.3.0
 
       - name: Initialize Terraform
-        run: |
-          terraform init \
-            -backend-config="resource_group_name=rg-web-eus" \
-            -backend-config="storage_account_name=strepac" \
-            -backend-config="container_name=conepac" \
-            -backend-config="key=terraform.tfstate"
+        run: terraform init
 
       - name: Remove Local Terraform State File (if exists)
-        run: rm -f terraform.tfstate || true
+        run: rm -f terraform.tfstate
 
       - name: Apply Terraform Configuration
-        env:
-          TF_VAR_tenant_id: ${{ env.tenant_id }}
-          TF_VAR_client_id: ${{ env.client_id }}
-          TF_VAR_client_secret: ${{ env.client_secret }}
-          TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: terraform apply -auto-approve
