@@ -27,8 +27,8 @@ provider "azurerm" {
 }
 
 resource "azurerm_management_group" "root" {
-  name                       = "mgmt9"
-  display_name               = "mgmt9"
+  name                       = "mgmt0"
+  display_name               = "mgmt0"
   subscription_ids           = ["13ba43d9-3859-4c70-9f8d-182debaa038b"]
 }
 
