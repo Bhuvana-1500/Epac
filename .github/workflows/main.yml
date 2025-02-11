@@ -30,7 +30,8 @@ jobs:
           echo "tenant_id=$TENANT_ID" >> $GITHUB_ENV
 
       - name: Log in to Azure CLI
-        run: az login --service-principal -u ${{ env.client_id }} -p ${{ env.client_secret }} --tenant ${{ env.tenant_id }}
+        run: |
+         az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p="${{ secrets.AZURE_CLIENT_SECRET }}" --tenant ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Upload Terraform Files to Azure Storage
         run: |
