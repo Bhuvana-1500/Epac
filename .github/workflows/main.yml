@@ -25,13 +25,13 @@ jobs:
           CLIENT_ID=$(awk -F' *= *' '/client_id/ {print $2}' epac.tf | tr -d '"')
           CLIENT_SECRET=$(awk -F' *= *' '/client_secret/ {print $2}' epac.tf | tr -d '"')
           TENANT_ID=$(awk -F' *= *' '/tenant_id/ {print $2}' epac.tf | tr -d '"')
-          SUBSCRIPTION_ID=$(awk -F' *= *' '/subscription_id/ {print $2}' epac.tf | tr -d '"')
+
 
            # Securely store them as environment variables
           echo "ARM_CLIENT_ID=$CLIENT_ID" >> $GITHUB_ENV
           echo "ARM_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=$TENANT_ID" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=$SUBSCRIPTION_ID" >> $GITHUB_ENV
+          
 
       - name: Log in to Azure CLI
         run: |
