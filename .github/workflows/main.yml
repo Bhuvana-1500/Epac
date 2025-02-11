@@ -19,58 +19,40 @@ jobs:
           sudo apt-get install -y curl
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-      - name: Extract Azure Credentials from Terraform
+      - name: Extract Azure Credentials
         id: extract-creds
         run: |
-          CLIENT_ID=$(grep -oP 'client_id\s*=\s*"\K[^"]+' epac.tf)
-          CLIENT_SECRET=$(grep -oP 'client_secret\s*=\s*"\K[^"]+' epac.tf)
-          SUBSCRIPTION_ID=$(grep -oP 'subscription_id\s*=\s*"\K[^"]+' epac.tf)
-          TENANT_ID=$(grep -oP 'tenant_id\s*=\s*"\K[^"]+' epac.tf)
+          CLIENT_ID=$(awk -F' *= *' '/client_id/ {print $2}' terraform/main.tf | tr -d '"')
+          CLIENT_SECRET=$(awk -F' *= *' '/client_secret/ {print $2}' terraform/main.tf | tr -d '"')
+          TENANT_ID=$(awk -F' *= *' '/tenant_id/ {print $2}' terraform/main.tf | tr -d '"')
+          echo "::set-output name=client_id::$CLIENT_ID"
+          echo "::set-output name=client_secret::$CLIENT_SECRET"
+          echo "::set-output name=tenant_id::$TENANT_ID"
 
-          echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_ENV
-          echo "CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
-          echo "SUBSCRIPTION_ID=$SUBSCRIPTION_ID" >> $GITHUB_ENV
-          echo "TENANT_ID=$TENANT_ID" >> $GITHUB_ENV
-
-      - name: Debug Extracted Credentials
-        run: |
-          echo "CLIENT_ID: ${CLIENT_ID:0:5}**********"
-          echo "SUBSCRIPTION_ID: ${SUBSCRIPTION_ID:0:5}**********"
-          echo "TENANT_ID: ${TENANT_ID:0:5}**********"
-          echo "CLIENT_SECRET: ********** (Hidden)"
-
-      - name: Azure Login (Fix Special Characters Issue)
-        run: |
-          az login --service-principal --username "$CLIENT_ID" --password '${{ env.CLIENT_SECRET }}' --tenant "$TENANT_ID"
-
-      - name: Set Azure Subscription
-        run: |
-          az account set --subscription "$SUBSCRIPTION_ID"
-
-      - name: Verify Login
-        run: az account show
+      - name: Log in to Azure CLI
+        run: az login --service-principal -u ${{ steps.extract-creds.outputs.client_id }} -p ${{ steps.extract-creds.outputs.client_secret }} --tenant ${{ steps.extract-creds.outputs.tenant_id }}
 
       - name: Upload Terraform Files to Azure Storage
         run: |
           az storage blob upload-batch --account-name strepac --destination conepac --source . --pattern "*.tf" --overwrite --auth-mode login
-
-      - name: Set Up Terraform
+          
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.3.0
+          terraform_version: 1.3.0  # Specify the version of Terraform to use
 
-      - name: Set Azure Authentication Environment Variables
-        run: |
-          export ARM_CLIENT_ID=$CLIENT_ID
-          export ARM_CLIENT_SECRET=$CLIENT_SECRET
-          export ARM_SUBSCRIPTION_ID=$SUBSCRIPTION_ID
-          export ARM_TENANT_ID=$TENANT_ID
-
-      - name: Initialize Terraform
+      - name: Set Terraform Variables and Initialize
         run: terraform init
+        working-directory: terraform
 
-      - name: Remove Local Terraform State File (if exists)
+      - name: Remove Terraform State File
         run: rm -f terraform.tfstate
 
       - name: Apply Terraform Configuration
+        env:
+          TF_VAR_tenant_id: ${{ steps.extract-creds.outputs.tenant_id }}
+          TF_VAR_client_id: ${{ steps.extract-creds.outputs.client_id }}
+          TF_VAR_client_secret: ${{ steps.extract-creds.outputs.client_secret }}
+          TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: terraform apply -auto-approve
+        working-directory: terraform
