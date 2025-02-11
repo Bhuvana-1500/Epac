@@ -22,12 +22,12 @@ jobs:
       - name: Extract Azure Credentials
         id: extract-creds
         run: |
-          CLIENT_ID=$(awk -F' *= *' '/client_id/ {print $2}' epac.tf | tr -d '"')
-          CLIENT_SECRET=$(awk -F' *= *' '/client_secret/ {print $2}' epac.tf | tr -d '"')
-          TENANT_ID=$(awk -F' *= *' '/tenant_id/ {print $2}' epac.tf | tr -d '"')
-          SUBSCRIPTION_ID=$(awk -F' *= *' '/subscription_id/ {print $2}' epac.tf | tr -d '"')
+          CLIENT_ID=$(grep -oP 'client_id\s*=\s*"\K[^"]+' epac.tf)
+          CLIENT_SECRET=$(grep -oP 'client_secret\s*=\s*"\K[^"]+' epac.tf)
+          TENANT_ID=$(grep -oP 'tenant_id\s*=\s*"\K[^"]+' epac.tf)
+          SUBSCRIPTION_ID=$(grep -oP 'subscription_id\s*=\s*"\K[^"]+' epac.tf)
 
-           # Securely store them as environment variables
+          # Securely store them as environment variables
           echo "ARM_CLIENT_ID=$CLIENT_ID" >> $GITHUB_ENV
           echo "ARM_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=$TENANT_ID" >> $GITHUB_ENV
@@ -48,15 +48,13 @@ jobs:
 
       - name: Set Azure Authentication Environment Variables
         run: |
-          export ARM_CLIENT_ID=$(awk -F' *= *' '/client_id/ {print $2}' terraform/main.tf | tr -d '"')
-          export ARM_CLIENT_SECRET=$(awk -F' *= *' '/client_secret/ {print $2}' terraform/main.tf | tr -d '"')
-          export ARM_SUBSCRIPTION_ID=$(awk -F' *= *' '/subscription_id/ {print $2}' terraform/main.tf | tr -d '"')
-          export ARM_TENANT_ID=$(awk -F' *= *' '/tenant_id/ {print $2}' terraform/main.tf | tr -d '"')
+          export ARM_CLIENT_ID=$CLIENT_ID
+          export ARM_CLIENT_SECRET=$CLIENT_SECRET
+          export ARM_SUBSCRIPTION_ID=$SUBSCRIPTION_ID
+          export ARM_TENANT_ID=$TENANT_ID
 
       - name: Initialize Terraform
         run: terraform init
-
-
 
       - name: Remove Local Terraform State File (if exists)
         run: rm -f terraform.tfstate
