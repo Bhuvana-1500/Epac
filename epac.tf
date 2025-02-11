@@ -1,3 +1,30 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "3.100.0"
+    }
+  }
+}
+
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-web-eus"
+    storage_account_name = "strepac"
+    container_name       = "conepac"
+    key                  = "terraform.tfstate"
+  }
+}
+
+provider "azurerm" {
+  skip_provider_registration = true
+  features {}  # Include at least one "features" block
+  client_secret = "-Ss8Q~DZFSUn2zod1MU-fvEl~7EyFbxvnjAC3b6B"
+  client_id = "9c2e5200-9c57-46ad-aacd-b087b4c1c5be"
+  tenant_id = "30bf9f37-d550-4878-9494-1041656caf27"
+  subscription_id = "13ba43d9-3859-4c70-9f8d-182debaa038b"
+}
+
 resource "azurerm_management_group" "root" {
   name                       = "mgmt0"
   display_name               = "mgmt0"
