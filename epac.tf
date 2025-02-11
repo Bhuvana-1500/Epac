@@ -18,6 +18,7 @@ terraform {
 
 provider "azurerm" {
   skip_provider_registration = true
+
   features {}  # Include at least one "features" block
   client_secret = "-Ss8Q~DZFSUn2zod1MU-fvEl~7EyFbxvnjAC3b6B"
   client_id = "9c2e5200-9c57-46ad-aacd-b087b4c1c5be"
