@@ -3,7 +3,7 @@ name: Azure Login via Terraform Credentials
 on:
   push:
     paths:
-      - 'epac.tf'  # Trigger workflow when Terraform file changes
+      - '**.tf'  # Trigger workflow when Terraform file changes
 
 jobs:
   azure-login:
@@ -39,9 +39,9 @@ jobs:
           echo "TENANT_ID: ${TENANT_ID:0:5}**********"
           echo "CLIENT_SECRET: ********** (Hidden)"
 
-      - name: Azure Login
+      - name: Azure Login (Fix Special Characters Issue)
         run: |
-          az login --service-principal --username "$CLIENT_ID" --password "$CLIENT_SECRET" --tenant "$TENANT_ID"
+          az login --service-principal --username "$CLIENT_ID" --password '${{ env.CLIENT_SECRET }}' --tenant "$TENANT_ID"
 
       - name: Set Azure Subscription
         run: |
