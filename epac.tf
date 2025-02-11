@@ -21,7 +21,7 @@ provider "azurerm" {
 
   features {}  # Include at least one "features" block
   client_id = "9c2e5200-9c57-46ad-aacd-b087b4c1c5be"
-  client_secret = "-Ss8Q~DZFSUn2zod1MU-fvEl~7EyFbxvnjAC3b6B"
+  client_secret = "4Qr8Q~oMYsyr4944u2D0a-W6Op7IScyoqoLBUdfi"
   tenant_id = "30bf9f37-d550-4878-9494-1041656caf27"
   subscription_id = "13ba43d9-3859-4c70-9f8d-182debaa038b"
 }
