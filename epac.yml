@@ -3,8 +3,7 @@ name: Sync and Deploy Terraform Configuration
 on:
   push:
     paths:
-      - '**.tf'  # Trigger workflow on any Terraform file change
-      - '**.tfvars'
+      - 'epac.tf'  # Trigger workflow on any Terraform file change
 
 jobs:
   sync-upload-deploy:
