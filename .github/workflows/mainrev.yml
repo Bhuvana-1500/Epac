@@ -1,0 +1,52 @@
+name: extract policies from mgmt group
+
+on:
+  push:
+    paths:
+      - 'epac.tf'  # Trigger workflow when Terraform file changes
+
+jobs:
+  azure-login:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Azure CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Extract Azure Credentials from Terraform
+        id: extract-creds
+        run: |
+          CLIENT_ID=$(grep -oP 'client_id\s*=\s*"\K[^"]+' epac.tf)
+          CLIENT_SECRET=$(grep -oP 'client_secret\s*=\s*"\K[^"]+' epac.tf)
+          SUBSCRIPTION_ID=$(grep -oP 'subscription_id\s*=\s*"\K[^"]+' epac.tf)
+          TENANT_ID=$(grep -oP 'tenant_id\s*=\s*"\K[^"]+' epac.tf)
+
+          echo "ARM_CLIENT_ID=$CLIENT_ID" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=$SUBSCRIPTION_ID" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$TENANT_ID" >> $GITHUB_ENV
+
+      - name: Debug Extracted Credentials (Masked)
+        run: |
+          echo "CLIENT_ID: ${CLIENT_ID:0:5}**********"
+          echo "SUBSCRIPTION_ID: ${SUBSCRIPTION_ID:0:5}**********"
+          echo "TENANT_ID: ${TENANT_ID:0:5}**********"
+          echo "CLIENT_SECRET: ********** (Hidden)"
+
+      - name: Set Terraform Authentication
+        run: |
+          export ARM_CLIENT_ID=$ARM_CLIENT_ID
+          export ARM_CLIENT_SECRET=$ARM_CLIENT_SECRET
+          export ARM_SUBSCRIPTION_ID=$ARM_SUBSCRIPTION_ID
+          export ARM_TENANT_ID=$ARM_TENANT_ID
+
+      - name: List Policy Assignments
+        run: |
+          az policy assignment list --scope /providers/Microsoft.Management/managementGroups/mgmt0 > policies.json
+          cat policies.json
