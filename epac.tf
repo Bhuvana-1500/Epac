@@ -29,7 +29,7 @@ provider "azurerm" {
 resource "azurerm_management_group" "root" {
   name                       = "mgmt0"
   display_name               = "mgmt0"
-  subscription_ids           = ["13ba43d9-3859-4c70-9f8d-182debaa038b"]
+  subscription_id           = ["b1af8833-cc76-47d5-ac29-4f7d63cdb243"]
 }
 
 resource "azurerm_policy_definition" "standard_naming_convention_policy" {
