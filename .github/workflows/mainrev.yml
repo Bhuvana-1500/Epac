@@ -3,7 +3,7 @@ name: extract policies from mgmt group
 on:
   push:
     paths:
-      - 'epac.tf'  # Trigger workflow when Terraform file changes
+      - 'epacrev.tf'  # Trigger workflow when Terraform file changes
 
 jobs:
   azure-login:
