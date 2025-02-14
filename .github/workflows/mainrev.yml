@@ -62,3 +62,7 @@ jobs:
         run: |
           az policy assignment list --scope /providers/Microsoft.Management/managementGroups/mgmt0 > policies.json
           cat policies.json
+
+      - name: Output Terraform Policy Assignments
+        run: |
+          terraform output policy_assignments
